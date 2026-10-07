@@ -2478,9 +2478,9 @@ void main() {
         await _pumpTradeDetail(
           tester,
           orderId: 'order-pinned-de-$status',
-          // The buyer's active step header still overflows here (its chip,
-          // #712); the seller's does not, and the card is the same.
-          isBuyer: status != OrderStatus.active,
+          // The buyer's side: its active step header carries the widest
+          // chip (`DU BIST DRAN`), which overflowed before #712.
+          isBuyer: true,
           status: status,
           locale: const Locale('de'),
         );
