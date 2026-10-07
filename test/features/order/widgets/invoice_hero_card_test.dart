@@ -63,4 +63,54 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.widget<Text>(find.text('252')).style?.fontSize, 38);
   });
+
+  _largeTextTests();
+}
+
+/// #712, DS-A11Y-4: the hero at 320 dp, 2x text, German, as the invoice
+/// screens lay it out (18-dp gutter, under an `IntrinsicHeight`).
+Future<void> _pumpLarge(WidgetTester tester, {required int sats}) async {
+  tester.view.physicalSize = const Size(320, 800);
+  tester.view.devicePixelRatio = 1.0;
+  tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+  addTearDown(tester.view.reset);
+  addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: buildDarkTheme(),
+      locale: const Locale('de'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: kInvoiceGutter),
+          child: IntrinsicHeight(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InvoiceHeroCard(
+                  label: 'Zu zahlen',
+                  sats: sats,
+                  semanticsLabel: '$sats Satoshis zu zahlen',
+                  contextLine: '≈ 312 ARS · Bitcoin Bolivia',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
+}
+
+void _largeTextTests() {
+  for (final sats in [252, 163069, 1234567890]) {
+    testWidgets('320 dp, 2x text, German: the hero does not overflow ($sats)', (
+      tester,
+    ) async {
+      await _pumpLarge(tester, sats: sats);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
