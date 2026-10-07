@@ -77,28 +77,7 @@ class TradeStepBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hasHeader) ...[
-            _readout(
-              Row(
-                children: [
-                  if (stepLabel != null)
-                    Expanded(
-                      child: Text(
-                        stepLabel!,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.6,
-                          color: book.textTertiary,
-                        ),
-                      ),
-                    )
-                  else
-                    const Spacer(),
-                  if (chip != TradeChip.none)
-                    TradeStatusChip(kind: chip, label: chipLabel),
-                ],
-              ),
-            ),
+            _readout(_header(book)),
             const SizedBox(height: 11),
           ],
           if (summary != null) ...[
@@ -160,6 +139,46 @@ class TradeStepBlock extends StatelessWidget {
 }
 
 extension on TradeStepBlock {
+  /// `STEP n OF 5` on the left, the chip on the right. When both do not fit
+  /// on one line (320 dp, 2x text, German: DS-A11Y-4) the chip wraps under
+  /// the label instead of overflowing; at regular sizes the line is as
+  /// before (#712).
+  Widget _header(OrderBookPalette book) {
+    final label = stepLabel;
+    final chipWidget =
+        chip == TradeChip.none
+            ? null
+            : TradeStatusChip(kind: chip, label: chipLabel);
+    if (label == null) {
+      return Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: chipWidget,
+      );
+    }
+    final labelText = Text(
+      label,
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        color: book.textTertiary,
+      ),
+    );
+    if (chipWidget == null) {
+      return SizedBox(width: double.infinity, child: labelText);
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 6,
+        children: [labelText, chipWidget],
+      ),
+    );
+  }
+
   Widget _title(bool hasHeader, OrderBookPalette book) {
     final text = Text.rich(
       title,
@@ -226,13 +245,17 @@ class TradeStatusChip extends StatelessWidget {
             decoration: BoxDecoration(shape: BoxShape.circle, color: dot),
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
-              color: ink,
+          // Wraps rather than overflows when the label alone is wider than
+          // the line (`DU BIST DRAN` at 2x on 320 dp, #712).
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+                color: ink,
+              ),
             ),
           ),
         ],
