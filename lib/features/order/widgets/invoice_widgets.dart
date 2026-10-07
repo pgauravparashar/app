@@ -561,46 +561,66 @@ class InvoiceTimeUpView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final book = OrderBookPalette.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        kInvoiceGutter,
-        0,
-        kInvoiceGutter,
-        kInvoiceGutter + MediaQuery.of(context).viewPadding.bottom,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(),
-          Icon(Icons.timer_off_outlined, size: 40, color: book.textSecondary),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: book.textPrimary,
+    final padding = EdgeInsets.fromLTRB(
+      kInvoiceGutter,
+      0,
+      kInvoiceGutter,
+      kInvoiceGutter + MediaQuery.of(context).viewPadding.bottom,
+    );
+    // Scrolls when the content is taller than the screen (320 dp, 2x text,
+    // German: DS-A11Y-4, #712); otherwise it fills the height, so the
+    // Spacers centre the message and keep the button at the bottom as
+    // before.
+    return LayoutBuilder(
+      builder:
+          (context, constraints) => SingleChildScrollView(
+            padding: padding,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: (constraints.maxHeight - padding.vertical).clamp(
+                  0.0,
+                  double.infinity,
+                ),
+              ),
+              child: IntrinsicHeight(child: _content(book)),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.45,
-              color: book.textSecondary,
-            ),
+    );
+  }
+
+  Widget _content(OrderBookPalette book) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Spacer(),
+        Icon(Icons.timer_off_outlined, size: 40, color: book.textSecondary),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: book.textPrimary,
           ),
-          const Spacer(),
-          InvoicePrimaryButton(
-            icon: Icons.arrow_back,
-            label: actionLabel,
-            onPressed: onAction,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          body,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.45,
+            color: book.textSecondary,
           ),
-        ],
-      ),
+        ),
+        const Spacer(),
+        InvoicePrimaryButton(
+          icon: Icons.arrow_back,
+          label: actionLabel,
+          onPressed: onAction,
+        ),
+      ],
     );
   }
 }
